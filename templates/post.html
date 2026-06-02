@@ -9,7 +9,7 @@
 <body>
 
 <nav>
-  <a href="index.html" class="nav-brand">✏️ BlogAPI</a>
+  <a href="/" class="nav-brand">✏️ BlogAPI</a>
   <div class="nav-links" id="navLinks"></div>
 </nav>
 
@@ -83,7 +83,7 @@
       
       // Show edit/delete buttons if user is the author
       if (isLoggedIn() && getUsername() === post.author) {
-        actions += ` <a href="edit.html?id=${postId}" class="btn btn-outline btn-sm">✏️ Edit</a>`;
+        actions += ` <a href="/edit/?id=${postId}" class="btn btn-outline btn-sm">✏️ Edit</a>`;
         actions += ` <button class="btn btn-danger btn-sm" onclick="deletePost()" style="background:#dc3545;">🗑️ Delete</button>`;
       }
 
@@ -128,7 +128,7 @@
   async function likePost() {
     if (!isLoggedIn()) {
       alert('Please login to like posts');
-      window.location.href = 'login.html';
+      window.location.href = '/login/';
       return;
     }
 
@@ -145,7 +145,7 @@
   async function postComment() {
     if (!isLoggedIn()) {
       alert('Please login to comment');
-      window.location.href = 'login.html';
+      window.location.href = '/login/';
       return;
     }
 
@@ -192,7 +192,7 @@
 
     if (result.success) {
       alert('✅ Post deleted');
-      window.location.href = 'index.html';
+      window.location.href = '/';
     } else {
       alert('❌ ' + result.error);
     }

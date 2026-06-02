@@ -91,12 +91,12 @@ async function logout() {
   localStorage.removeItem('blog_token');
   localStorage.removeItem('blog_username');
   localStorage.removeItem('blog_user_id');
-  window.location.href = 'login.html';
+  window.location.href = '/login/';
 }
 
 function requireLogin() {
   if (!isLoggedIn()) {
-    window.location.href = 'login.html';
+    window.location.href = '/login/';
   }
 }
 
@@ -122,14 +122,14 @@ function buildNav() {
   if (isLoggedIn()) {
     nav.innerHTML = `
       <span class="nav-username">👤 ${getUsername()}</span>
-      <a href="create.html" class="btn btn-primary btn-sm">+ New Post</a>
-      <a href="profile.html" class="btn btn-outline btn-sm">Profile</a>
+      <a href="/create/" class="btn btn-primary btn-sm">+ New Post</a>
+      <a href="/profile/" class="btn btn-outline btn-sm">Profile</a>
       <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
     `;
   } else {
     nav.innerHTML = `
-      <a href="login.html" class="btn btn-outline btn-sm">Login</a>
-      <a href="register.html" class="btn btn-primary btn-sm">Register</a>
+      <a href="/login/" class="btn btn-outline btn-sm">Login</a>
+      <a href="/register/" class="btn btn-primary btn-sm">Register</a>
     `;
   }
 }

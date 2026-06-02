@@ -9,7 +9,7 @@
 <body>
 
 <nav>
-  <a href="index.html" class="nav-brand">✏️ BlogAPI</a>
+  <a href="/" class="nav-brand">✏️ BlogAPI</a>
   <div class="nav-links" id="navLinks"></div>
 </nav>
 
@@ -82,7 +82,7 @@
     list.innerHTML = posts.map(p => `
       <div class="post-card">
         ${p.image ? `<img src="${p.image}" class="post-card-image">` : ''}
-        <a href="post.html?id=${p.id}" class="post-card-title">${escapeHtml(p.title)}</a>
+        <a href="/post/?id=${p.id}" class="post-card-title">${escapeHtml(p.title)}</a>
         <div class="post-meta">
           <span>👤 ${escapeHtml(p.author || 'Unknown')}</span>
           ${p.category_name ? `<span class="badge">${escapeHtml(p.category_name)}</span>` : ''}
@@ -92,7 +92,7 @@
         </div>
         <div class="post-excerpt">${escapeHtml((p.content || '').slice(0, 180))}${(p.content || '').length > 180 ? '...' : ''}</div>
         <div class="post-actions">
-          <a href="post.html?id=${p.id}" class="btn btn-outline btn-sm">Read more</a>
+          <a href="/post/?id=${p.id}" class="btn btn-outline btn-sm">Read more</a>
           <button class="like-btn" onclick="likePost(${p.id}, this)">❤️ Like</button>
         </div>
       </div>
@@ -125,7 +125,7 @@
   async function likePost(postId, btn) {
     if (!isLoggedIn()) {
       alert('Please login to like posts');
-      window.location.href = 'login.html';
+      window.location.href = '/login/';
       return;
     }
 

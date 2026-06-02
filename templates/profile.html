@@ -9,7 +9,7 @@
 <body>
 
 <nav>
-  <a href="index.html" class="nav-brand">✏️ BlogAPI</a>
+  <a href="/" class="nav-brand">✏️ BlogAPI</a>
   <div class="nav-links" id="navLinks"></div>
 </nav>
 
@@ -47,7 +47,7 @@
 
       <div style="display:flex; gap:10px; margin-top:8px;">
         <button class="btn btn-primary" onclick="doUpdate()">💾 Save Changes</button>
-        <a href="index.html" class="btn btn-outline">Back to Posts</a>
+        <a href="/" class="btn btn-outline">Back to Posts</a>
       </div>
 
       <hr style="margin: 30px 0;">
@@ -93,14 +93,14 @@
       const userPosts = posts.filter(p => p.author === username);
 
       if (!userPosts.length) {
-        document.getElementById('userPosts').innerHTML = '<p style="color:#999;">You haven\'t posted anything yet. <a href="create.html">Create your first post!</a></p>';
+        document.getElementById('userPosts').innerHTML = '<p style="color:#999;">You haven\'t posted anything yet. <a href="/create/">Create your first post!</a></p>';
         return;
       }
 
       document.getElementById('userPosts').innerHTML = userPosts.map(p => `
         <div style="padding:15px; border:1px solid #eee; border-radius:4px; margin-bottom:10px;">
           <div style="font-weight:700; margin-bottom:5px;">
-            <a href="post.html?id=${p.id}" style="text-decoration:none; color:#333;">
+            <a href="/post/?id=${p.id}" style="text-decoration:none; color:#333;">
               ${escapeHtml(p.title)}
             </a>
           </div>
@@ -111,7 +111,7 @@
           </div>
           <div style="margin-bottom:10px;">${escapeHtml((p.content || '').slice(0, 100))}...</div>
           <div>
-            <a href="edit.html?id=${p.id}" class="btn btn-outline btn-sm">Edit</a>
+            <a href="/edit/?id=${p.id}" class="btn btn-outline btn-sm">Edit</a>
             <button onclick="deletePost(${p.id})" class="btn btn-danger btn-sm" style="background:#dc3545;">Delete</button>
           </div>
         </div>

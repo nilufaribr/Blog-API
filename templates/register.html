@@ -9,7 +9,7 @@
 <body>
 
 <nav>
-  <a href="index.html" class="nav-brand">✏️ BlogAPI</a>
+  <a href="/" class="nav-brand">✏️ BlogAPI</a>
   <div class="nav-links" id="navLinks"></div>
 </nav>
 
@@ -43,7 +43,7 @@
     <button class="btn btn-primary btn-full" onclick="doRegister()">Create Account</button>
 
     <div class="auth-link">
-      Already have an account? <a href="login.html">Login here</a>
+      Already have an account? <a href="/login/">Login here</a>
     </div>
   </div>
 </div>
@@ -52,7 +52,7 @@
 <script>
   // If already logged in, redirect
   if (isLoggedIn()) {
-    window.location.href = 'index.html';
+    window.location.href = '/';
   }
 
   async function doRegister() {
@@ -91,7 +91,7 @@
       localStorage.setItem('blog_token', result.data.token);
       localStorage.setItem('blog_username', username);
       showAlert('registerSuccess', '✅ Account created! Redirecting...', 'success');
-      setTimeout(() => window.location.href = 'index.html', 800);
+      setTimeout(() => window.location.href = '/', 800);
     } else {
       const errorMsg = result.data && result.data.username 
         ? result.data.username[0] 
