@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — BlogAPI</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand">✏️ BlogAPI</a>
+  <div class="nav-links" id="navLinks"></div>
+</nav>
+
+<div class="container-sm">
+  <div class="card">
+    <h2 style="font-size:22px; font-weight:700; margin-bottom:20px; text-align:center;">Create Account 🚀</h2>
+
+    <div class="alert alert-error" id="registerError" style="display:none;"></div>
+    <div class="alert alert-success" id="registerSuccess" style="display:none;"></div>
+
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="Choose a username" autofocus>
+    </div>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="Enter your email">
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Password (min 8 characters)">
+    </div>
+
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <input type="password" id="confirm_password" placeholder="Confirm your password" onkeydown="if(event.key==='Enter') doRegister()">
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="doRegister()">Create Account</button>
+
+    <div class="auth-link">
+      Already have an account? <a href="login.html">Login here</a>
+    </div>
+  </div>
+</div>
+
+<script src="/static/utils.js"></script>
+<script>
+  // If already logged in, redirect
+  if (isLoggedIn()) {
+    window.location.href = 'index.html';
+  }
+
+  async function doRegister() {
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm_password').value;
+
+    hideAlert('registerError');
+    hideAlert('registerSuccess');
+
+    // Validation
+    if (!username || !email || !password || !confirm) {
+      showAlert('registerError', '⚠️ Please fill in all fields.', 'error');
+      return;
+    }
+
+    if (password.length < 8) {
+      showAlert('registerError', '⚠️ Password must be at least 8 characters.', 'error');
+      return;
+    }
+
+    if (password !== confirm) {
+      showAlert('registerError', '⚠️ Passwords do not match.', 'error');
+      return;
+    }
+
+    const result = await apiCall('/auth/register/', 'POST', { 
+      username, 
+      email, 
+      password 
+    });
+
+    if (result.success) {
+      // Auto-login
+      localStorage.setItem('blog_token', result.data.token);
+      localStorage.setItem('blog_username', username);
+      showAlert('registerSuccess', '✅ Account created! Redirecting...', 'success');
+      setTimeout(() => window.location.href = 'index.html', 800);
+    } else {
+      const errorMsg = result.data && result.data.username 
+        ? result.data.username[0] 
+        : result.error;
+      showAlert('registerError', '❌ ' + errorMsg, 'error');
+    }
+  }
+</script>
+</body>
+</html>

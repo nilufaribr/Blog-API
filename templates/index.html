@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog — All Posts</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand">✏️ BlogAPI</a>
+  <div class="nav-links" id="navLinks"></div>
+</nav>
+
+<div class="container">
+  <h1 class="page-title">All Posts</h1>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Search by title...">
+    <select id="categoryFilter">
+      <option value="">All categories</option>
+    </select>
+    <select id="orderSelect">
+      <option value="-created_at">Newest first</option>
+      <option value="created_at">Oldest first</option>
+      <option value="title">A → Z</option>
+    </select>
+  </div>
+
+  <div id="postsList">
+    <div class="loading">Loading posts...</div>
+  </div>
+</div>
+
+<script src="/static/utils.js"></script>
+<script>
+  let allPosts = [];
+
+  async function loadPosts() {
+    const result = await apiCall('/posts/');
+    
+    if (result.success) {
+      allPosts = Array.isArray(result.data) ? result.data : (result.data.results || []);
+      loadCategories();
+      renderPosts(allPosts);
+    } else {
+      document.getElementById('postsList').innerHTML = 
+        '<div class="empty-msg">❌ ' + result.error + '</div>';
+    }
+  }
+
+  async function loadCategories() {
+    const result = await apiCall('/posts/');
+    
+    if (result.success && allPosts.length > 0) {
+      // Extract unique categories from posts
+      const categories = [...new Set(
+        allPosts
+          .filter(p => p.category)
+          .map(p => JSON.stringify({ id: p.category, name: p.category_name || `Category ${p.category}` }))
+      )].map(s => JSON.parse(s));
+
+      const sel = document.getElementById('categoryFilter');
+      categories.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        sel.appendChild(opt);
+      });
+    }
+  }
+
+  function renderPosts(posts) {
+    const list = document.getElementById('postsList');
+    
+    if (!posts.length) {
+      list.innerHTML = '<div class="empty-msg">No posts found.</div>';
+      return;
+    }
+
+    list.innerHTML = posts.map(p => `
+      <div class="post-card">
+        ${p.image ? `<img src="${p.image}" class="post-card-image">` : ''}
+        <a href="post.html?id=${p.id}" class="post-card-title">${escapeHtml(p.title)}</a>
+        <div class="post-meta">
+          <span>👤 ${escapeHtml(p.author || 'Unknown')}</span>
+          ${p.category_name ? `<span class="badge">${escapeHtml(p.category_name)}</span>` : ''}
+          <span>❤️ ${p.likes_count || 0} likes</span>
+          <span>💬 ${p.comments_count || 0} comments</span>
+          <span>📅 ${new Date(p.created_at).toLocaleDateString()}</span>
+        </div>
+        <div class="post-excerpt">${escapeHtml((p.content || '').slice(0, 180))}${(p.content || '').length > 180 ? '...' : ''}</div>
+        <div class="post-actions">
+          <a href="post.html?id=${p.id}" class="btn btn-outline btn-sm">Read more</a>
+          <button class="like-btn" onclick="likePost(${p.id}, this)">❤️ Like</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function filterAndRender() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const cat = document.getElementById('categoryFilter').value;
+    const order = document.getElementById('orderSelect').value;
+
+    let filtered = allPosts.filter(p => {
+      const matchSearch = p.title.toLowerCase().includes(q);
+      const matchCat = cat ? String(p.category) === String(cat) : true;
+      return matchSearch && matchCat;
+    });
+
+    // Sort
+    if (order === '-created_at') {
+      filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } else if (order === 'created_at') {
+      filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    } else if (order === 'title') {
+      filtered.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
+    renderPosts(filtered);
+  }
+
+  async function likePost(postId, btn) {
+    if (!isLoggedIn()) {
+      alert('Please login to like posts');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const result = await apiCall(`/posts/${postId}/like/`, 'POST');
+    
+    if (result.success) {
+      btn.classList.add('liked');
+      btn.textContent = '❤️ Liked';
+    } else {
+      alert(result.error || 'Already liked!');
+    }
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+  }
+
+  // Event listeners
+  document.getElementById('searchInput').addEventListener('input', filterAndRender);
+  document.getElementById('categoryFilter').addEventListener('change', filterAndRender);
+  document.getElementById('orderSelect').addEventListener('change', filterAndRender);
+
+  // Load on page load
+  loadPosts();
+</script>
+</body>
+</html>

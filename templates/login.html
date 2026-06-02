@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — BlogAPI</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand">✏️ BlogAPI</a>
+  <div class="nav-links" id="navLinks"></div>
+</nav>
+
+<div class="container-sm">
+  <div class="card">
+    <h2 style="font-size:22px; font-weight:700; margin-bottom:20px; text-align:center;">Welcome back 👋</h2>
+
+    <div class="alert alert-error" id="loginError" style="display:none;"></div>
+    <div class="alert alert-success" id="loginSuccess" style="display:none;"></div>
+
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="Enter your username" autofocus>
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Enter your password" onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Login</button>
+
+    <div class="auth-link">
+      Don't have an account? <a href="register.html">Register here</a>
+    </div>
+  </div>
+</div>
+
+<script src="/static/utils.js"></script>
+<script>
+  // If already logged in, redirect to home
+  if (isLoggedIn()) {
+    window.location.href = 'index.html';
+  }
+
+  async function doLogin() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    hideAlert('loginError');
+    hideAlert('loginSuccess');
+
+    if (!username || !password) {
+      showAlert('loginError', '⚠️ Please fill in all fields.', 'error');
+      return;
+    }
+
+    const result = await apiCall('/auth/login/', 'POST', { username, password });
+
+    if (result.success) {
+      localStorage.setItem('blog_token', result.data.token);
+      localStorage.setItem('blog_username', username);
+      showAlert('loginSuccess', '✅ Login successful! Redirecting...', 'success');
+      setTimeout(() => window.location.href = 'index.html', 800);
+    } else {
+      showAlert('loginError', '❌ ' + result.error, 'error');
+    }
+  }
+</script>
+</body>
+</html>

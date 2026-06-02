@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post — BlogAPI</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand">✏️ BlogAPI</a>
+  <div class="nav-links" id="navLinks"></div>
+</nav>
+
+<div class="container" style="max-width: 900px;">
+  <div id="postContent" class="card" style="display:none;">
+    <div id="postTitle"></div>
+    <div id="postMeta"></div>
+    <img id="postImage" style="width:100%; max-height:400px; object-fit:cover; border-radius:8px; margin:20px 0; display:none;">
+    <div id="postBody"></div>
+    <div id="postActions" style="margin-top:30px; padding-top:20px; border-top:1px solid #ddd;"></div>
+  </div>
+
+  <div id="loading" class="loading">Loading post...</div>
+  <div id="error" class="empty-msg" style="display:none;"></div>
+
+  <!-- Comments Section -->
+  <div class="card" style="margin-top:40px;">
+    <h3>💬 Comments</h3>
+    
+    <div id="commentsList" style="margin-bottom:30px;"></div>
+
+    <div id="commentForm">
+      <h4>Leave a Comment</h4>
+      <div class="alert alert-error" id="commentError" style="display:none;"></div>
+      <div class="alert alert-success" id="commentSuccess" style="display:none;"></div>
+      
+      <textarea id="commentText" placeholder="Share your thoughts..." style="min-height:100px; width:100%; padding:10px; border:1px solid #ddd; border-radius:4px;"></textarea>
+      <button class="btn btn-primary" style="margin-top:10px;" onclick="postComment()">Post Comment</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/utils.js"></script>
+<script>
+  const postId = new URLSearchParams(window.location.search).get('id');
+
+  async function loadPost() {
+    if (!postId) {
+      document.getElementById('error').textContent = '❌ No post ID provided.';
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('loading').style.display = 'none';
+      return;
+    }
+
+    const result = await apiCall(`/posts/${postId}/`);
+
+    if (result.success) {
+      const post = result.data;
+      
+      // Display post
+      document.getElementById('postTitle').innerHTML = `<h1>${escapeHtml(post.title)}</h1>`;
+      
+      document.getElementById('postMeta').innerHTML = `
+        <div class="post-meta">
+          <span>👤 ${escapeHtml(post.author)}</span>
+          <span>📅 ${new Date(post.created_at).toLocaleDateString()}</span>
+          <span>❤️ ${post.likes_count} likes</span>
+          <span>💬 ${post.comments_count} comments</span>
+        </div>
+      `;
+
+      if (post.image) {
+        document.getElementById('postImage').src = post.image;
+        document.getElementById('postImage').style.display = 'block';
+      }
+
+      document.getElementById('postBody').innerHTML = `<p>${escapeHtml(post.content)}</p>`;
+
+      // Action buttons
+      let actions = `<button class="like-btn" onclick="likePost()">❤️ Like (${post.likes_count})</button>`;
+      
+      // Show edit/delete buttons if user is the author
+      if (isLoggedIn() && getUsername() === post.author) {
+        actions += ` <a href="edit.html?id=${postId}" class="btn btn-outline btn-sm">✏️ Edit</a>`;
+        actions += ` <button class="btn btn-danger btn-sm" onclick="deletePost()" style="background:#dc3545;">🗑️ Delete</button>`;
+      }
+
+      document.getElementById('postActions').innerHTML = actions;
+      document.getElementById('postContent').style.display = 'block';
+
+      // Load comments
+      loadComments();
+    } else {
+      document.getElementById('error').textContent = '❌ ' + result.error;
+      document.getElementById('error').style.display = 'block';
+    }
+
+    document.getElementById('loading').style.display = 'none';
+  }
+
+  async function loadComments() {
+    const result = await apiCall(`/posts/${postId}/comments/`);
+
+    if (result.success) {
+      const comments = Array.isArray(result.data) ? result.data : (result.data.results || []);
+      
+      if (!comments.length) {
+        document.getElementById('commentsList').innerHTML = '<p style="color:#999;">No comments yet. Be the first!</p>';
+        return;
+      }
+
+      document.getElementById('commentsList').innerHTML = comments.map(c => `
+        <div style="padding:15px; border:1px solid #eee; border-radius:4px; margin-bottom:10px;">
+          <div style="font-weight:700; margin-bottom:5px;">👤 ${escapeHtml(c.user)}</div>
+          <div style="color:#666; font-size:12px; margin-bottom:10px;">📅 ${new Date(c.created_at).toLocaleDateString()}</div>
+          <div>${escapeHtml(c.text)}</div>
+          ${isLoggedIn() && getUsername() === c.user ? `
+            <button style="margin-top:10px; color:#dc3545; background:none; border:none; cursor:pointer; font-size:12px;" 
+                    onclick="deleteComment(${c.id})">Delete</button>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+  }
+
+  async function likePost() {
+    if (!isLoggedIn()) {
+      alert('Please login to like posts');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const result = await apiCall(`/posts/${postId}/like/`, 'POST');
+    
+    if (result.success) {
+      alert('✅ Post liked!');
+      loadPost(); // Reload to update like count
+    } else {
+      alert(result.error);
+    }
+  }
+
+  async function postComment() {
+    if (!isLoggedIn()) {
+      alert('Please login to comment');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const text = document.getElementById('commentText').value.trim();
+    
+    hideAlert('commentError');
+    hideAlert('commentSuccess');
+
+    if (!text) {
+      showAlert('commentError', '⚠️ Please write a comment.', 'error');
+      return;
+    }
+
+    const result = await apiCall(`/posts/${postId}/comments/`, 'POST', { text });
+
+    if (result.success) {
+      showAlert('commentSuccess', '✅ Comment posted!', 'success');
+      document.getElementById('commentText').value = '';
+      loadComments();
+      loadPost(); // Update comment count
+    } else {
+      showAlert('commentError', '❌ ' + result.error, 'error');
+    }
+  }
+
+  async function deleteComment(commentId) {
+    if (!confirm('Delete this comment?')) return;
+
+    const result = await apiCall(`/comments/${commentId}/`, 'DELETE');
+
+    if (result.success) {
+      alert('✅ Comment deleted');
+      loadComments();
+      loadPost();
+    } else {
+      alert('❌ ' + result.error);
+    }
+  }
+
+  async function deletePost() {
+    if (!confirm('Delete this post? This cannot be undone.')) return;
+
+    const result = await apiCall(`/posts/${postId}/`, 'DELETE');
+
+    if (result.success) {
+      alert('✅ Post deleted');
+      window.location.href = 'index.html';
+    } else {
+      alert('❌ ' + result.error);
+    }
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+  }
+
+  // Load post on page load
+  loadPost();
+</script>
+</body>
+</html>
