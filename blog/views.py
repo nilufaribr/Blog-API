@@ -14,11 +14,6 @@ from .serializers import (
     PostSerializer, CommentSerializer, LikeSerializer, CategorySerializer
 )
 from .permissions import IsOwnerOrReadOnly
-from django.shortcuts import render
-
-
-def Home(request):
-    return render(request, 'home.html')
 
 
 class RegisterView(generics.CreateAPIView):

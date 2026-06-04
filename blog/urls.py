@@ -3,13 +3,10 @@ from .views import (
     RegisterView, LoginView, LogoutView, ProfileView,
     PostListCreateView, PostDetailView,
     CommentListCreateView, CommentDetailView,
-    LikeView, Home
+    LikeView
 )
 
 urlpatterns = [
-    # GET http://127.0.0.1:8000/api/
-    path('', Home, name='home'),
-
     # Authentication APIs
     # POST http://127.0.0.1:8000/api/auth/register/
     path('auth/register/', RegisterView.as_view(), name='register'),
